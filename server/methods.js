@@ -4,7 +4,7 @@ import { Meteor } from 'meteor/meteor';
 
 // Importação da collection People para manipular os dados dos participantes
 // Esta collection contém todos os participantes registrados nos eventos
-import { People } from '../api/collections/people.js';
+import { People } from '../people/people';
 
 /**
  * Métodos do Meteor para gerenciar check-in e check-out de participantes
@@ -28,6 +28,7 @@ Meteor.methods({
    * 
    * @param {string} personId - ID único da pessoa que está fazendo check-in
    * @throws {Meteor.Error} - Se personId não for uma string válida ou se a pessoa não for encontrada
+   * @returns {Object} - Objeto com status de sucesso e mensagem
    */
   async 'people.checkIn'(personId) {
     // Validação de entrada: verifica se personId é uma string
@@ -43,6 +44,14 @@ Meteor.methods({
     }
 
     try {
+      // Verifica se a pessoa existe antes de fazer o check-in
+      // Isso garante que não tentamos fazer check-in de pessoas inexistentes
+      const person = await People.findOneAsync({ _id: personId });
+      
+      if (!person) {
+        throw new Meteor.Error('person-not-found', 'Pessoa não encontrada no sistema.');
+      }
+
       // Atualização do documento na collection People usando o método updateAsync (Meteor 3)
       // O método updateAsync é assíncrono e retorna uma Promise
       const result = await People.updateAsync(
@@ -57,16 +66,19 @@ Meteor.methods({
             
             // checkOutDate: define como null para limpar qualquer check-out anterior
             // Isso garante que a pessoa apareça como "presente" no evento
-            checkOutDate: null
-          }
+            checkOutDate: null,
+          },
         }
       );
 
       // Verifica se a atualização foi bem-sucedida
       // result.modifiedCount indica quantos documentos foram modificados
       if (result.modifiedCount === 0) {
-        throw new Meteor.Error('person-not-found', 'Pessoa não encontrada ou já com check-in realizado.');
+        throw new Meteor.Error('update-failed', 'Falha ao atualizar os dados da pessoa.');
       }
+
+      // Log para auditoria removido para conformidade ESLint
+      // console.log(`Check-in realizado com sucesso para pessoa ID: ${personId}`);
 
       // Retorna sucesso se a operação foi concluída
       return { success: true, message: 'Check-in realizado com sucesso!' };
@@ -78,7 +90,7 @@ Meteor.methods({
       }
       
       // Para outros tipos de erro, cria um erro genérico do Meteor
-      throw new Meteor.Error('database-error', 'Erro ao realizar check-in: ' + error.message);
+      throw new Meteor.Error('database-error', `Erro ao realizar check-in: ${error.message}`);
     }
   },
 
@@ -91,6 +103,7 @@ Meteor.methods({
    * 
    * @param {string} personId - ID único da pessoa que está fazendo check-out
    * @throws {Meteor.Error} - Se personId não for uma string válida ou se a pessoa não for encontrada
+   * @returns {Object} - Objeto com status de sucesso e mensagem
    */
   async 'people.checkOut'(personId) {
     // Validação de entrada: verifica se personId é uma string
@@ -134,8 +147,8 @@ Meteor.methods({
         {
           $set: {
             // checkOutDate: registra a data e hora exatas do check-out
-            checkOutDate: new Date()
-          }
+            checkOutDate: new Date(),
+          },
         }
       );
 
@@ -143,6 +156,9 @@ Meteor.methods({
       if (result.modifiedCount === 0) {
         throw new Meteor.Error('update-failed', 'Falha ao atualizar os dados da pessoa.');
       }
+
+      // Log para auditoria removido para conformidade ESLint
+      // console.log(`Check-out realizado com sucesso para pessoa ID: ${personId}`);
 
       // Retorna sucesso se a operação foi concluída
       return { success: true, message: 'Check-out realizado com sucesso!' };
@@ -154,7 +170,7 @@ Meteor.methods({
       }
       
       // Para outros tipos de erro, cria um erro genérico do Meteor
-      throw new Meteor.Error('database-error', 'Erro ao realizar check-out: ' + error.message);
+      throw new Meteor.Error('database-error', `Erro ao realizar check-out: ${error.message}`);
     }
-  }
+  },
 });

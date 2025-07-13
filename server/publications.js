@@ -3,65 +3,76 @@
 import { Meteor } from 'meteor/meteor';
 
 // Importação das collections que serão utilizadas nas publicações
-// Estas collections contêm os dados que precisam ser enviados ao cliente
-import { Communities } from '../api/collections/communities.js';
-import { People } from '../api/collections/people.js';
-
-Meteor.publish('communities', function() {
-  // Log para debug - ajuda a monitorar quando a publicação é chamada
-  console.log('Publicação communities foi solicitada por um cliente');
-  
-  // Retorna um cursor para todos os documentos da collection Communities
-  // O cursor é reativo - quando novos eventos são adicionados ou modificados,
-  // todos os clientes inscritos nesta publicação recebem as atualizações automaticamente
-  return Communities.find();
-});
+// Estas collections contêm os dados que precisem ser enviados ao cliente
+import { Communities } from '../communities/communities';
+import { People } from '../people/people';
 
 /**
- * Esta publicação é utilizada para:
- * - Mostrar apenas as pessoas registradas no evento selecionado
- * - Implementar reatividade na lista de participantes
- * - Permitir updates em tempo real dos status de check-in/check-out
- * - Otimizar performance enviando apenas dados relevantes
+ * Publicação: communities
+ * 
+ * Esta publicação envia todos os eventos/comunidades disponíveis para o cliente.
+ * É utilizada para popular o dropdown de seleção de eventos na interface.
+ * Como geralmente há poucos eventos, enviamos todos sem filtragem.
+ * 
+ * @returns {Mongo.Cursor} - Cursor reativo com todos os documentos da collection Communities
  */
-Meteor.publish('people', function(communityId) {
-  // Log para debug - inclui o communityId para facilitar troubleshooting
-  console.log(`Publicação people foi solicitada para communityId: ${communityId}`);
+Meteor.publish('communities', () => Communities.find());
+
+/**
+ * Publicação: people
+ * 
+ * Esta publicação é responsável por enviar apenas as pessoas registradas
+ * no evento/comunidade selecionado. É uma publicação parametrizada que
+ * recebe o ID da comunidade como argumento.
+ * 
+ * Funcionalidades principais:
+ * - Filtra pessoas por evento específico
+ * - Implementa validações de segurança
+ * - Fornece reatividade para check-ins/check-outs
+ * - Otimiza performance enviando apenas dados relevantes
+ * 
+ * @param {string} communityId - ID da comunidade/evento para filtrar as pessoas
+ * @returns {Mongo.Cursor|Array} - Cursor com pessoas filtradas ou array vazio se inválido
+ */
+Meteor.publish('people', (communityId) => {
+  // Log removido para conformidade ESLint
+  // console.log(`Publicação people foi solicitada para communityId: ${communityId}`);
   
   // VALIDAÇÃO DE SEGURANÇA: Verificar se communityId foi fornecido
   // Sem um communityId válido, não devemos enviar nenhum dado
   // Isso previne que clientes vejam dados de todos os eventos sem autorização
   if (!communityId) {
-    console.log('Publicação people: communityId não fornecido, retornando vazio');
+    // Log removido para conformidade ESLint
+    // console.log('Publicação people: communityId não fornecido, retornando vazio');
     
-    // Retorna um cursor vazio - nenhum dado será enviado ao cliente
-    // this.ready() sinaliza que a publicação terminou de enviar dados
-    this.ready();
-    return;
+    // Retorna array vazio - nenhum dado será enviado ao cliente
+    // O Meteor automaticamente sinaliza ready() quando a função termina
+    return [];
   }
   
   // VALIDAÇÃO ADICIONAL: Verificar se communityId é uma string
   // Isso previne ataques e garante que o tipo de dado está correto
   if (typeof communityId !== 'string') {
-    console.log('Publicação people: communityId deve ser uma string, retornando vazio');
-    this.ready();
-    return;
+    // Log removido para conformidade ESLint
+    // console.log('Publicação people: communityId deve ser uma string, retornando vazio');
+    return [];
   }
   
   // VALIDAÇÃO: Verificar se communityId não é uma string vazia
+  // Uma string vazia não é um ID válido e poderia causar problemas na busca
   if (!communityId.trim()) {
-    console.log('Publicação people: communityId está vazio, retornando vazio');
-    this.ready();
-    return;
+    // Log removido para conformidade ESLint
+    // console.log('Publicação people: communityId está vazio, retornando vazio');
+    return [];
   }
   
   // BUSCA FILTRADA: Retorna apenas pessoas do evento especificado
-  // O filtro { communityId: communityId } garante que apenas pessoas
-  // associadas ao evento selecionado sejam enviadas ao cliente
-  const cursor = People.find({ communityId: communityId });
+  // O filtro { communityId } é equivalente a { communityId: communityId }
+  // Garante que apenas pessoas associadas ao evento selecionado sejam enviadas
+  const cursor = People.find({ communityId });
   
-  // Log para debug - ajuda a monitorar quantas pessoas estão sendo enviadas
-  console.log(`Publicação people: enviando pessoas para communityId ${communityId}`);
+  // Log removido para conformidade ESLint
+  // console.log(`Publicação people: enviando pessoas para communityId ${communityId}`);
   
   // Retorna o cursor filtrado
   // Este cursor é reativo, então quando pessoas fazem check-in/check-out,
@@ -69,7 +80,8 @@ Meteor.publish('people', function(communityId) {
   // todos os clientes inscritos recebem as atualizações automaticamente
   return cursor;
   
-  // IMPORTANTE: A reatividade funciona em dois níveis aqui:
+  // IMPORTANTE: A reatividade funciona em múltiplos níveis:
   // 1. Se uma pessoa é adicionada/removida do evento, a lista é atualizada
   // 2. Se os dados de check-in/check-out de uma pessoa mudam, os clientes veem imediatamente
+  // 3. Se uma pessoa muda de evento, ela desaparece/aparece nas listas apropriadas
 });
