@@ -18,19 +18,6 @@ import EventSummary from '../components/EventSummary.jsx';
 import PeopleList from '../components/PeopleList.jsx';
 
 /**
- * COMPONENTE PRINCIPAL: HomePage
- * 
- * Este é o componente raiz da aplicação de check-in de eventos.
- * Ele coordena todos os outros componentes e gerencia o estado global
- * da aplicação, incluindo qual evento está selecionado atualmente.
- * 
- * RESPONSABILIDADES:
- * 1. Gerenciar o estado do evento selecionado (selectedCommunityId)
- * 2. Coordenar a comunicação entre componentes filhos via props
- * 3. Gerenciar inscrições reativas nas publicações do Meteor
- * 4. Fornecer dados atualizados em tempo real para os componentes
- * 5. Definir o layout principal e estilo visual da aplicação
- * 
  * ARQUITETURA:
  * - Usa padrão de "container component" - gerencia dados e estado
  * - Passa dados e callbacks para componentes apresentacionais
