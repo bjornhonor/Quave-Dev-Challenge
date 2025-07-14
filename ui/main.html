@@ -1,0 +1,37 @@
+<!-- 
+  Arquivo HTML base da aplicação Meteor
+  
+  Este arquivo define a estrutura HTML básica onde a aplicação React será renderizada.
+  O Meteor usa este template como base e injeta os scripts necessários automaticamente.
+-->
+<head>
+  <!-- Título da aplicação exibido na aba do navegador -->
+  <title>Quave Event Check-in</title>
+  
+  <!-- Meta tags essenciais para responsividade e encoding -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Meta tags para SEO e redes sociais (opcional) -->
+  <meta name="description" content="Sistema de gerenciamento de presença em eventos - Quave Challenge">
+  <meta name="author" content="Quave Code Challenge">
+  
+  <!-- Favicon (opcional) - você pode adicionar um ícone personalizado -->
+  <!-- <link rel="icon" type="image/x-icon" href="/favicon.ico"> -->
+</head>
+
+<body>
+  <!-- 
+    Container principal onde a aplicação React será renderizada
+    
+    O ID "app" é referenciado no arquivo client/main.js:
+    - createRoot(document.getElementById('app'))
+    
+    O Meteor automaticamente:
+    - Injeta scripts do React e da aplicação
+    - Carrega TailwindCSS
+    - Configura hot reload para desenvolvimento
+    - Gerencia todas as dependências
+  -->
+  <div id="app"></div>
+</body>
